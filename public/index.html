@@ -1,0 +1,62 @@
+<body>
+    <h1>Video Upload</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="video" accept="video/*">
+        <button type="submit">Upload</button>
+    </form><br><br>
+    <button onclick="listVideos()">List Videos</button>
+    <ul id="videoList"></ul>
+
+    <script>
+        function listVideos() {
+            fetch('/videos')
+                .then(response => response.json())
+                .then(videos => {
+                    const videoList = document.getElementById('videoList');
+                    videoList.innerHTML = '';
+                    videos.forEach(video => {
+                        const videoContainer = document.createElement('div');
+                        const videoElement = document.createElement('video');
+                        videoElement.src = 'uploads/' + video;
+                        videoElement.controls = true;
+
+                        // Buttons to trim video to 10 seconds and 20 seconds
+                        const trim10Button = document.createElement('button');
+                        trim10Button.textContent = 'Trim to 10s';
+                        trim10Button.onclick = () => trimVideo(video, 10);
+
+                        const trim20Button = document.createElement('button');
+                        trim20Button.textContent = 'Trim to 20s';
+                        trim20Button.onclick = () => trimVideo(video, 20);
+
+                        videoContainer.appendChild(videoElement);
+                        videoContainer.appendChild(trim10Button);
+                        videoContainer.appendChild(trim20Button);
+
+                        videoList.appendChild(videoContainer);
+                    });
+                })
+                .catch(error => console.error('Error fetching videos:', error));
+        }
+
+        function trimVideo(videoName, duration) {
+    fetch(`/trim?video=${videoName}&duration=${duration}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to trim video');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert(data.message); // Display success message
+            // Optionally, you can refresh the list of videos after trimming
+            listVideos();
+        })
+        .catch(error => {
+            console.error('Error trimming video:', error);
+            alert('Failed to trim video. Please try again.');
+        });
+}
+
+    </script>
+</body>
